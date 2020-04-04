@@ -1,18 +1,22 @@
 import Vue from 'vue'
 import Vuex, { Commit } from 'vuex'
+import router from '../router/index'
 
 Vue.use(Vuex)
 
-interface Todo {
+type Todo = {
   key: number;
   todo: string;
   date: Date;
   isFinish: boolean;
-  doingByUsers: Array<User>;
+  isEditable: boolean;
+  tasks: Array<Task>;
 }
 
-interface User{
-  name: string;
+type Task = {
+  key: number;
+  task: string;
+  isEditable: boolean;
   date: Date;
 }
 
@@ -33,22 +37,61 @@ interface TodoWithKey{
   key: number;
 }
 
+interface TaskWithKey{
+  task: Task;
+  key: number;
+}
+
 const initialTodos: Array<Todo> = [
   {
     key:0,
-    todo:'My First Todo',
+    todo:'List hari ini',
     date:new Date("Sun Feb 23 2020 12:15:20 GMT+0700 (Western Indonesia Time)"),
     isFinish: false,
-    doingByUsers: [
+    isEditable: false,
+    tasks: [
       {
-        name:"Asep",
+        key:0,
+        task:"Nyuci Piring",
+        isEditable: false,
         date:new Date("Sun Feb 23 2020 12:15:20 GMT+0700 (Western Indonesia Time)")
       },
       {
-        name:"Hakim",
+        key:1,
+        task:"Ngepel",
+        isEditable: false,
         date:new Date("Sun Feb 23 2020 12:15:20 GMT+0700 (Western Indonesia Time)")
       },
     ]
+  },
+  {
+    key:1,
+    todo:'List hari esok',
+    date:new Date("Sun Feb 23 2020 12:15:20 GMT+0700 (Western Indonesia Time)"),
+    isFinish: false,
+    isEditable: false,
+    tasks: [
+      {
+        key:0,
+        task:"Makan",
+        isEditable: false,
+        date:new Date("Sun Feb 23 2020 12:15:20 GMT+0700 (Western Indonesia Time)")
+      },
+      {
+        key:1,
+        task:"Minum",
+        isEditable: false,
+        date:new Date("Sun Feb 23 2020 12:15:20 GMT+0700 (Western Indonesia Time)")
+      },
+    ]
+  },
+  {
+    key:2,
+    todo:'lusa ..',
+    date:new Date("Sun Feb 23 2020 12:15:20 GMT+0700 (Western Indonesia Time)"),
+    isFinish: false,
+    isEditable: false,
+    tasks: []
   }
 ]
 
@@ -67,11 +110,24 @@ export default new Vuex.Store({
     },
     EDIT_TODO: (state: State, todoWithKey: TodoWithKey): void => {
       const newTodos: Array<Todo> = state.todos.slice();
+      console.log('todoWithKey.todo',todoWithKey.todo)
       newTodos.map((todo: Todo)=>{
         if(todo.key === todoWithKey.key){
           todo = todoWithKey.todo;
+          console.log('setTodo',todo)
         }
       })
+      console.log('newTodos',newTodos)
+      state.todos = newTodos;
+    },
+    ADD_TASK_TODO: (state: State, taskWithKey: TaskWithKey): void => {
+      const newTodos: Array<Todo> = state.todos.slice();
+      newTodos[taskWithKey.key].tasks = [...newTodos[taskWithKey.key].tasks, {
+        ...taskWithKey.task,
+        key: newTodos[taskWithKey.key].tasks.length,
+        isEditable: false
+      }]
+      console.log('newTodos',newTodos)
       state.todos = newTodos;
     },
     DELETE_TODO: (state: State, indexTodo: number): void => {
@@ -96,10 +152,22 @@ export default new Vuex.Store({
     },
     editTodo: ({commit, state}: SetTodosParam, todoWithKey: TodoWithKey): void =>{
       state.isLoading = true;
-      setTimeout(()=>{
-        commit('EDIT_TODO', todoWithKey);
-        state.isLoading = false;
-      },1000)
+      new Promise((resolve)=>{
+        setTimeout(()=>{
+          commit('EDIT_TODO', todoWithKey)
+          state.isLoading = false;
+          resolve();
+        },1000)
+      })
+    },
+    addTaskTodo: ({commit, state}: SetTodosParam, taskWithKey: TaskWithKey): void =>{
+      state.isLoading = true;
+      new Promise((resolve)=>{
+        setTimeout(()=>{
+          resolve(commit('ADD_TASK_TODO', taskWithKey));
+          state.isLoading = false;
+        },1000)
+      })
     },
     deleteTodo: ({commit, state}: SetTodosParam, indexTodo: number): void =>{
       state.isLoading = true;
@@ -114,6 +182,9 @@ export default new Vuex.Store({
         commit('LOGIN', loginName);
         state.isLogin = true;
         state.isLoading = false;
+        router.push({ 
+          name: 'Todos', 
+        })
       },1000)
     },
     logout: ({commit,state}: SetTodosParam): void =>{
@@ -126,5 +197,12 @@ export default new Vuex.Store({
     },
   },
   modules: {
-  }
+  },
+  getters:{
+    isLoading:(state: State) => state.isLoading,
+    isLogin:(state: State) => state.isLogin,
+    loginName: (state: State) => state.loginName,
+    todos: (state: State) => state.todos,
+    taskTodos: (state: State) => (key: number) => state.todos.find((item)=>item.key === key)
+  },
 })

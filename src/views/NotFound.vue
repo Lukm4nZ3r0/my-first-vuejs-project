@@ -1,6 +1,6 @@
 <script>
 export default {
-  name: 'About',
+  name: 'NotFound',
   components: {
   }
 }
@@ -8,6 +8,7 @@ export default {
 
 <template>
   <v-app>
-    <h1>This is an about page</h1>
+    <h1>404 Not Found</h1>
+    <router-link to="/">Dashboard</router-link>
   </v-app>
 </template>
